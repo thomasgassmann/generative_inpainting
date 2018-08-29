@@ -1,3 +1,20 @@
+# Workshop in Machine Learning for Computer Graphics 
+Exploring Generative Image Inpainting with Contextual Attention
+
+Forked from JiahuiYu's repo, the following repo was used for testing the [model](https://arxiv.org/abs/1801.07892) by Jiahui Yu et. al as part of a Workshop on the subject of GANs and computer vision. Our goal was to study the model both theoretically and through ablation studies, and to attempt in fine tuning it on a specific domain- images of faces. 
+
+In the following [report](https://docs.google.com/document/d/1Ha68clQ0eCSrFMmmjQS6u1lJ4hhUVU-cjZA0XITdIYU/edit?usp=sharing) we present:
+* Ablation studies of important stages in the model
+    * The Attention Path
+    * The Hallucination Path
+    *  The Spatial Mask
+* The Usefulness of adding perceptual loss in the case of Faces.
+
+<img src="https://preview.ibb.co/hpBMSp/Capture.jpg" width="75%"/> 
+
+For running and training the model see original instructions below.
+
+
 # Generative Image Inpainting with Contextual Attention
 
 [CVPR 2018 Paper](https://arxiv.org/abs/1801.07892) | [ArXiv](https://arxiv.org/abs/1801.07892) | [Project](http://jiahuiyu.com/deepfill) | [Demo](http://jiahuiyu.com/deepfill) | [YouTube](https://youtu.be/xz1ZvcdhgQ0) | [BibTex](#citing)
