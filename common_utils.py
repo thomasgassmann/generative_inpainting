@@ -170,7 +170,7 @@ def run_test():
 
 
 # create_test_imgs()
-run_test()
+#run_test() #remember to sort folders before reunning
 
 ####### comments #######
 
