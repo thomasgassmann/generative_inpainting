@@ -42,7 +42,6 @@ class InpaintCAModel(Model):
         x = tf.concat([x, ones_x, ones_x * mask], axis=3)
 
         if (config.GATED_CONVOLUTIONS):
-            print("fuck yes")
             used_conv = gen_gated_conv
         else:
             used_conv = gen_conv
