@@ -6,3 +6,5 @@ misc
 test_cases
 idea
 .idea
+*.npy
+*.png
