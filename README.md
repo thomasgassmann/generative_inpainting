@@ -53,6 +53,8 @@ python test.py --image examples/celeba/celebahr_patches_164036_input.png --mask 
 # ImageNet 256x256 input
 python test.py --image examples/imagenet/imagenet_patches_ILSVRC2012_val_00000827_input.png --mask examples/center_mask_256.png --output examples/output.png --checkpoint_dir model_logs/release_imagenet_256
 ```
+Citing
+```
 @article{yu2018generative,
   title={Generative Image Inpainting with Contextual Attention},
   author={Yu, Jiahui and Lin, Zhe and Yang, Jimei and Shen, Xiaohui and Lu, Xin and Huang, Thomas S},
