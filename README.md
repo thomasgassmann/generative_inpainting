@@ -7,8 +7,9 @@ In the following [report](https://docs.google.com/document/d/1Ha68clQ0eCSrFMmmjQ
 * Ablation studies of important stages in the model.
     * The Attention Path.
     * The Hallucination Path.
-    *  The Spatial Mask.
-* The Usefulness of adding perceptual loss in the case of Faces.
+    * The Spatial Discounted Mask.
+* The Usefulness of adding gated convolutions.
+* The Usefulness of adding perceptual loss.
 
 <img src="https://preview.ibb.co/hpBMSp/Capture.jpg" width="75%"/> 
 
