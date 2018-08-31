@@ -4,6 +4,7 @@ import logging
 import cv2
 import neuralgym as ng
 import tensorflow as tf
+import tensorlayer as tl
 from tensorflow.contrib.framework.python.ops import arg_scope
 
 from neuralgym.models import Model
@@ -40,34 +41,33 @@ class InpaintCAModel(Model):
         ones_x = tf.ones_like(x)[:, :, :, 0:1]
         x = tf.concat([x, ones_x, ones_x * mask], axis=3)
 
-        if(config.GATED_CONVOLUTIONS):
-            print("fuck yes")
+        if (config.GATED_CONVOLUTIONS):
             used_conv = gen_gated_conv
         else:
             used_conv = gen_conv
         # two stage network
         cnum = 32
         with tf.variable_scope(name, reuse=reuse), \
-                arg_scope([used_conv, gen_deconv],
-                          training=training, padding=padding):
+             arg_scope([used_conv, gen_deconv],
+                       training=training, padding=padding):
             # stage1
             x = used_conv(x, cnum, 5, 1, name='conv1')
-            x = used_conv(x, 2*cnum, 3, 2, name='conv2_downsample')
-            x = used_conv(x, 2*cnum, 3, 1, name='conv3')
-            x = used_conv(x, 4*cnum, 3, 2, name='conv4_downsample')
-            x = used_conv(x, 4*cnum, 3, 1, name='conv5')
-            x = used_conv(x, 4*cnum, 3, 1, name='conv6')
+            x = used_conv(x, 2 * cnum, 3, 2, name='conv2_downsample')
+            x = used_conv(x, 2 * cnum, 3, 1, name='conv3')
+            x = used_conv(x, 4 * cnum, 3, 2, name='conv4_downsample')
+            x = used_conv(x, 4 * cnum, 3, 1, name='conv5')
+            x = used_conv(x, 4 * cnum, 3, 1, name='conv6')
             mask_s = resize_mask_like(mask, x)
-            x = used_conv(x, 4*cnum, 3, rate=2, name='conv7_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=4, name='conv8_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=8, name='conv9_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=16, name='conv10_atrous')
-            x = used_conv(x, 4*cnum, 3, 1, name='conv11')
-            x = used_conv(x, 4*cnum, 3, 1, name='conv12')
-            x = gen_deconv(x, 2*cnum, name='conv13_upsample')
-            x = used_conv(x, 2*cnum, 3, 1, name='conv14')
+            x = used_conv(x, 4 * cnum, 3, rate=2, name='conv7_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=4, name='conv8_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=8, name='conv9_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=16, name='conv10_atrous')
+            x = used_conv(x, 4 * cnum, 3, 1, name='conv11')
+            x = used_conv(x, 4 * cnum, 3, 1, name='conv12')
+            x = gen_deconv(x, 2 * cnum, name='conv13_upsample')
+            x = used_conv(x, 2 * cnum, 3, 1, name='conv14')
             x = gen_deconv(x, cnum, name='conv15_upsample')
-            x = used_conv(x, cnum//2, 3, 1, name='conv16')
+            x = used_conv(x, cnum // 2, 3, 1, name='conv16')
             x = used_conv(x, 3, 3, 1, activation=None, name='conv17')
             x = tf.clip_by_value(x, -1., 1.)
             x_stage1 = x
@@ -78,61 +78,61 @@ class InpaintCAModel(Model):
             x = x * mask + xin * (1. - mask)
             x.set_shape(xin.get_shape().as_list())
             # conv branch
-            xnow = tf.concat([x, ones_x, ones_x*mask], axis=3)
+            xnow = tf.concat([x, ones_x, ones_x * mask], axis=3)
             x = used_conv(xnow, cnum, 5, 1, name='xconv1')
             x = used_conv(x, cnum, 3, 2, name='xconv2_downsample')
-            x = used_conv(x, 2*cnum, 3, 1, name='xconv3')
-            x = used_conv(x, 2*cnum, 3, 2, name='xconv4_downsample')
-            x = used_conv(x, 4*cnum, 3, 1, name='xconv5')
-            x = used_conv(x, 4*cnum, 3, 1, name='xconv6')
-            x = used_conv(x, 4*cnum, 3, rate=2, name='xconv7_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=4, name='xconv8_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=8, name='xconv9_atrous')
-            x = used_conv(x, 4*cnum, 3, rate=16, name='xconv10_atrous')
-            
-            if(config.NO_HALLUC): 
-    			#turn off hallucination pathway for ablation study
+            x = used_conv(x, 2 * cnum, 3, 1, name='xconv3')
+            x = used_conv(x, 2 * cnum, 3, 2, name='xconv4_downsample')
+            x = used_conv(x, 4 * cnum, 3, 1, name='xconv5')
+            x = used_conv(x, 4 * cnum, 3, 1, name='xconv6')
+            x = used_conv(x, 4 * cnum, 3, rate=2, name='xconv7_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=4, name='xconv8_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=8, name='xconv9_atrous')
+            x = used_conv(x, 4 * cnum, 3, rate=16, name='xconv10_atrous')
+
+            if (config.NO_HALLUC):
+                # turn off hallucination pathway for ablation study
                 zeros = tf.zeros(
-        shape=x.shape,
-        dtype=tf.float32,
-        name=None
-    )
-                x_hallu = tf.multiply(x,zeros) #bit-wise multiplication
-            
+                    shape=x.shape,
+                    dtype=tf.float32,
+                    name=None
+                )
+                x_hallu = tf.multiply(x, zeros)  # bit-wise multiplication
+
             else:
-                x_hallu = x 
-            
+                x_hallu = x
+
             # attention branch
             x = used_conv(xnow, cnum, 5, 1, name='pmconv1')
             x = used_conv(x, cnum, 3, 2, name='pmconv2_downsample')
-            x = used_conv(x, 2*cnum, 3, 1, name='pmconv3')
-            x = used_conv(x, 4*cnum, 3, 2, name='pmconv4_downsample')
-            x = used_conv(x, 4*cnum, 3, 1, name='pmconv5')
-            x = used_conv(x, 4*cnum, 3, 1, name='pmconv6',
-                         activation=tf.nn.relu)
+            x = used_conv(x, 2 * cnum, 3, 1, name='pmconv3')
+            x = used_conv(x, 4 * cnum, 3, 2, name='pmconv4_downsample')
+            x = used_conv(x, 4 * cnum, 3, 1, name='pmconv5')
+            x = used_conv(x, 4 * cnum, 3, 1, name='pmconv6',
+                          activation=tf.nn.relu)
             x, offset_flow = contextual_attention(x, x, mask_s, 3, 1, rate=2)
-            x = used_conv(x, 4*cnum, 3, 1, name='pmconv9')
-            x = used_conv(x, 4*cnum, 3, 1, name='pmconv10')
+            x = used_conv(x, 4 * cnum, 3, 1, name='pmconv9')
+            x = used_conv(x, 4 * cnum, 3, 1, name='pmconv10')
 
-            if(config.NO_ATTENTION): 
-			#turn off attention pathway for ablation study
+            if (config.NO_ATTENTION):
+                # turn off attention pathway for ablation study
                 zeros = tf.zeros(
-        shape=x.shape,
-        dtype=tf.float32,
-        name=None
-    )
-                pm = tf.multiply(x,zeros)
-                
+                    shape=x.shape,
+                    dtype=tf.float32,
+                    name=None
+                )
+                pm = tf.multiply(x, zeros)
+
             else:
                 pm = x
 
             x = tf.concat([x_hallu, pm], axis=3)
-            x = used_conv(x, 4*cnum, 3, 1, name='allconv11')
-            x = used_conv(x, 4*cnum, 3, 1, name='allconv12')
-            x = gen_deconv(x, 2*cnum, name='allconv13_upsample')
-            x = used_conv(x, 2*cnum, 3, 1, name='allconv14')
+            x = used_conv(x, 4 * cnum, 3, 1, name='allconv11')
+            x = used_conv(x, 4 * cnum, 3, 1, name='allconv12')
+            x = gen_deconv(x, 2 * cnum, name='allconv13_upsample')
+            x = used_conv(x, 2 * cnum, 3, 1, name='allconv14')
             x = gen_deconv(x, cnum, name='allconv15_upsample')
-            x = used_conv(x, cnum//2, 3, 1, name='allconv16')
+            x = used_conv(x, cnum // 2, 3, 1, name='allconv16')
             x = used_conv(x, 3, 3, 1, activation=None, name='allconv17')
             x_stage2 = tf.clip_by_value(x, -1., 1.)
         return x_stage1, x_stage2, offset_flow
@@ -157,13 +157,57 @@ class InpaintCAModel(Model):
             x = flatten(x, name='flatten')
             return x
 
-    def build_wgan_discriminator(self, batch_local, batch_global,
-                                 reuse=False, training=True):
+    def build_wgan_local_discriminator_verbose(self, x, reuse=False, training=True):
+        with tf.variable_scope('discriminator_local', reuse=reuse):
+            cnum = 64
+            x1 = dis_conv(x, cnum, name='conv1', training=training)
+            x2 = dis_conv(x1, cnum * 2, name='conv2', training=training)
+            x3 = dis_conv(x2, cnum * 4, name='conv3', training=training)
+            x4 = dis_conv(x3, cnum * 8, name='conv4', training=training)
+            x5 = flatten(x4, name='flatten')
+            return x1, x2, x3, x4, x5
+
+    def build_wgan_global_discriminator_verbose(self, x, reuse=False, training=True):
+        with tf.variable_scope('discriminator_global', reuse=reuse):
+            cnum = 64
+            x1 = dis_conv(x, cnum, name='conv1', training=training)
+            x2 = dis_conv(x1, cnum * 2, name='conv2', training=training)
+            x3 = dis_conv(x2, cnum * 4, name='conv3', training=training)
+            x4 = dis_conv(x3, cnum * 4, name='conv4', training=training)
+            x5 = flatten(x4, name='flatten')
+            return x1, x2, x3, x4, x5
+
+    def get_perceptual_loss(self, target, predicted, name):
+        with tf.variable_scope(name):
+            loss = tl.cost.absolute_difference_error(target, predicted)
+            # loss = tf.reduce_mean(tf.abs(target - predicted))
+            scalar_summary('loss', loss)
+            scalar_summary('pos_value_avg', tf.reduce_mean(target))
+            scalar_summary('neg_value_avg', tf.reduce_mean(predicted))
+        return loss
+
+    def build_wgan_discriminator(self, batch_local, batch_global, reuse=False, training=True,
+                                 calc_perceptual_loss=False, losses=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            dlocal = self.build_wgan_local_discriminator(
-                batch_local, reuse=reuse, training=training)
-            dglobal = self.build_wgan_global_discriminator(
-                batch_global, reuse=reuse, training=training)
+            if (calc_perceptual_loss):
+                _, _, feats_local, _, dlocal = self.build_wgan_local_discriminator_verbose(batch_local,
+                                                                                           reuse=reuse,
+                                                                                           training=training)
+                _, _, feats_global, _, dglobal = self.build_wgan_global_discriminator_verbose(batch_global,
+                                                                                              reuse=reuse,
+                                                                                              training=training)
+                with tf.variable_scope('perceptual_loss', reuse=reuse):
+                    feats_local_flat = flatten(feats_local, "flatten_local")
+                    feats_global_flat = flatten(feats_global, "flatten_global")
+                    fl_neg, fl_pos = tf.split(feats_local_flat, 2)
+                    if ('perceptual_loss' not in losses):
+                        losses['perceptual_loss'] = 0
+                    losses['perceptual_loss'] += self.get_perceptual_loss(fl_pos, fl_neg, name="loss_local")
+                    fg_neg, fg_pos = tf.split(feats_global_flat, 2)
+                    losses['perceptual_loss'] += self.get_perceptual_loss(fg_pos, fg_neg, name="loss_global")
+            else:
+                dlocal = self.build_wgan_local_discriminator(batch_local, reuse=reuse, training=training)
+                dglobal = self.build_wgan_global_discriminator(batch_global, reuse=reuse, training=training)
             dout_local = tf.layers.dense(dlocal, 1, name='dout_local_fc')
             dout_global = tf.layers.dense(dglobal, 1, name='dout_global_fc')
             return dout_local, dout_global
@@ -175,9 +219,11 @@ class InpaintCAModel(Model):
         bbox = random_bbox(config)
         mask = bbox2mask(bbox, config, name='mask_c')
         batch_incomplete = batch_pos * (1. - mask)
+        # building the inpaint network
         x1, x2, offset_flow = self.build_inpaint_net(
             batch_incomplete, mask, config, reuse=reuse, training=training,
             padding=config.PADDING)
+
         if config.PRETRAIN_COARSE_NETWORK:
             batch_predicted = x1
             logger.info('Set batch_predicted to x1.')
@@ -195,8 +241,7 @@ class InpaintCAModel(Model):
         local_patch_batch_complete = local_patch(batch_complete, bbox)
         local_patch_mask = local_patch(mask, bbox)
         l1_alpha = config.COARSE_L1_ALPHA
-        losses['l1_loss'] = l1_alpha * tf.reduce_mean(
-            tf.abs(local_patch_batch_pos - local_patch_x1) * spatial_discounting_mask(config))
+        losses['l1_loss'] = l1_alpha * tf.reduce_mean(tf.abs(local_patch_batch_pos - local_patch_x1) * spatial_discounting_mask(config))
         if not config.PRETRAIN_COARSE_NETWORK:
             losses['l1_loss'] += tf.reduce_mean(
                 tf.abs(local_patch_batch_pos - local_patch_x2) * spatial_discounting_mask(config))
@@ -225,8 +270,14 @@ class InpaintCAModel(Model):
         # wgan with gradient penalty
         if config.GAN == 'wgan_gp':
             # seperate gan
-            pos_neg_local, pos_neg_global = self.build_wgan_discriminator(local_patch_batch_pos_neg, batch_pos_neg,
-                                                                          training=training, reuse=reuse)
+            # calculate wgan discriminator loss and perceptual loss
+            pos_neg_local, pos_neg_global = self.build_wgan_discriminator(
+                local_patch_batch_pos_neg,
+                batch_pos_neg,
+                training=training,
+                reuse=reuse,
+                calc_perceptual_loss=config.PERCEPTUAL_LOSS,
+                losses=losses)
             pos_local, neg_local = tf.split(pos_neg_local, 2)
             pos_global, neg_global = tf.split(pos_neg_global, 2)
             # wgan loss
@@ -238,7 +289,12 @@ class InpaintCAModel(Model):
             interpolates_local = random_interpolates(local_patch_batch_pos, local_patch_batch_complete)
             interpolates_global = random_interpolates(batch_pos, batch_complete)
             dout_local, dout_global = self.build_wgan_discriminator(
-                interpolates_local, interpolates_global, reuse=True)
+                interpolates_local,
+                interpolates_global,
+                reuse=True,
+                calc_perceptual_loss=False,
+                losses=losses
+            )
             # apply penalty
             penalty_local = gradients_penalty(interpolates_local, dout_local, mask=local_patch_mask)
             penalty_global = gradients_penalty(interpolates_global, dout_global, mask=mask)
@@ -267,9 +323,17 @@ class InpaintCAModel(Model):
             losses['g_loss'] = 0
         else:
             losses['g_loss'] = config.GAN_LOSS_ALPHA * losses['g_loss']
-        losses['g_loss'] += config.L1_LOSS_ALPHA * losses['l1_loss']
+        if summary:
+            losses['g_loss'] += config.L1_LOSS_ALPHA * losses['l1_loss']
+
+        ### perceptual loss
+        losses['g_loss'] += config.PERCEPTUAL_LOSS_ALPHA * losses['perceptual_loss']
+        scalar_summary('losses/perceptual_loss', losses['perceptual_loss'])
+        ###
+
         logger.info('Set L1_LOSS_ALPHA to %f' % config.L1_LOSS_ALPHA)
         logger.info('Set GAN_LOSS_ALPHA to %f' % config.GAN_LOSS_ALPHA)
+        logger.info('Set PERCEPTUAL_LOSS_ALPHA to %f' % config.PERCEPTUAL_LOSS_ALPHA)
         if config.AE_LOSS:
             losses['g_loss'] += config.AE_LOSS_ALPHA * losses['ae_loss']
             logger.info('Set AE_LOSS_ALPHA to %f' % config.AE_LOSS_ALPHA)
